@@ -1,0 +1,185 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* BGP Custom Styles */
+:root {
+  /* Primary Colors */
+  --color-primary-dark: #212121;
+  --color-dark-variant: #1a1a1a;
+  --color-brand-gold: #9c8040;
+  --color-action-teal: #009688;
+  
+  /* Interactive States */
+  --color-gold-hover: #b59448;
+  --color-gold-active: #8a6f37;
+  --color-teal-hover: #00796b;
+  
+  /* Text Colors */
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #cccccc;
+  --color-text-muted: #666666;
+  --color-bg-light: #f5f5f5;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+@layer components {
+  /* BGP Button Styles */
+  .bgp-btn {
+    @apply px-6 py-3 rounded-md font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+  
+  .bgp-btn-primary {
+    @apply bgp-btn bg-bgp-teal text-white hover:bg-bgp-teal-hover focus:ring-bgp-teal;
+  }
+  
+  .bgp-btn-secondary {
+    @apply bgp-btn bg-bgp-gold text-white hover:bg-bgp-gold-hover focus:ring-bgp-gold;
+  }
+  
+  .bgp-btn-outline {
+    @apply bgp-btn border-2 border-bgp-teal text-bgp-teal hover:bg-bgp-teal hover:text-white focus:ring-bgp-teal;
+  }
+  
+  .bgp-btn-danger {
+    @apply bgp-btn bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
+  }
+  
+  /* BGP Card Styles */
+  .bgp-card {
+    @apply bg-white rounded-lg shadow-md border border-gray-200 p-6;
+  }
+  
+  .bgp-card-dark {
+    @apply bg-bgp-darker text-white rounded-lg shadow-md border border-gray-700 p-6;
+  }
+  
+  /* BGP Form Styles */
+  .bgp-input {
+    @apply w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-bgp-teal focus:border-transparent transition-colors;
+  }
+  
+  .bgp-input-dark {
+    @apply w-full px-4 py-3 border border-gray-600 rounded-md bg-bgp-dark text-white focus:ring-2 focus:ring-bgp-teal focus:border-transparent transition-colors;
+  }
+  
+  .bgp-label {
+    @apply block text-sm font-medium text-gray-700 mb-2;
+  }
+  
+  .bgp-label-dark {
+    @apply block text-sm font-medium text-gray-300 mb-2;
+  }
+  
+  /* BGP Header Styles */
+  .bgp-header {
+    @apply text-bgp-gold font-bold;
+  }
+  
+  .bgp-header-1 {
+    @apply bgp-header text-3xl md:text-4xl;
+  }
+  
+  .bgp-header-2 {
+    @apply bgp-header text-2xl md:text-3xl;
+  }
+  
+  .bgp-header-3 {
+    @apply bgp-header text-xl md:text-2xl;
+  }
+  
+  /* Loading Spinner */
+  .spinner {
+    @apply animate-spin rounded-full h-8 w-8 border-b-2 border-bgp-teal;
+  }
+  
+  /* Status Badge Styles */
+  .status-badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  
+  .status-new {
+    @apply status-badge bg-blue-100 text-blue-800;
+  }
+  
+  .status-active {
+    @apply status-badge bg-green-100 text-green-800;
+  }
+  
+  .status-inactive {
+    @apply status-badge bg-gray-100 text-gray-800;
+  }
+  
+  /* Responsive Table */
+  .table-responsive {
+    @apply overflow-x-auto shadow ring-1 ring-black ring-opacity-5 md:rounded-lg;
+  }
+  
+  .table-responsive table {
+    @apply min-w-full divide-y divide-gray-300;
+  }
+  
+  .table-responsive thead {
+    @apply bg-gray-50;
+  }
+  
+  .table-responsive th {
+    @apply px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
+  }
+  
+  .table-responsive td {
+    @apply px-6 py-4 whitespace-nowrap text-sm text-gray-900;
+  }
+  
+  .table-responsive tbody {
+    @apply bg-white divide-y divide-gray-200;
+  }
+  
+  .table-responsive tbody tr:hover {
+    @apply bg-gray-50;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    background: linear-gradient(45deg, var(--color-brand-gold), var(--color-action-teal));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .bg-gradient-bgp {
+    background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-dark-variant) 100%);
+  }
+  
+  .shadow-bgp {
+    box-shadow: 0 10px 25px -5px rgba(156, 128, 64, 0.1), 0 4px 6px -2px rgba(156, 128, 64, 0.05);
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-brand-gold);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gold-hover);
+}
