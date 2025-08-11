@@ -1,0 +1,60 @@
+name: bgp-member-management
+services:
+  # Backend API Service
+  - name: bgp-backend
+    source_dir: /backend
+    github:
+      repo: HouseOfVibes/BGP_Members_Management
+      branch: main
+    run_command: npm start
+    build_command: npm install
+    environment_slug: node-js
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    http_port: 5000
+    env:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "5000"
+      - key: JWT_SECRET
+        value: "your-super-secure-jwt-secret-here-change-me"
+      - key: JWT_EXPIRES_IN
+        value: "7d"
+      - key: BCRYPT_SALT_ROUNDS
+        value: "12"
+      - key: RATE_LIMIT_WINDOW_MS
+        value: "900000"
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: "100"
+      - key: CORS_ORIGIN
+        value: "https://bgp-frontend-*.ondigitalocean.app"
+    health_check:
+      http_path: /health
+
+  # Frontend React Service
+  - name: bgp-frontend
+    source_dir: /frontend
+    github:
+      repo: HouseOfVibes/BGP_Members_Management
+      branch: main
+    build_command: npm install && npm run build
+    environment_slug: node-js
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    env:
+      - key: REACT_APP_API_URL
+        value: "${bgp-backend.PUBLIC_URL}/api"
+      - key: REACT_APP_ENVIRONMENT
+        value: "production"
+    http_port: 3000
+    routes:
+      - path: /
+
+# Optional: Database (uncomment when ready to add MySQL)
+# databases:
+#   - name: bgp-mysql
+#     engine: MYSQL
+#     version: "8"
+#     production: false
+#     size: db-s-1vcpu-1gb
