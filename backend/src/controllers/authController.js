@@ -12,36 +12,77 @@ const generateToken = (userId, role) => {
     );
 };
 
+// SECURITY: Strong password validation
+const validatePasswordStrength = (password) => {
+    const errors = [];
+
+    if (password.length < 12) {
+        errors.push('Password must be at least 12 characters long');
+    }
+
+    if (!/[a-z]/.test(password)) {
+        errors.push('Password must contain at least one lowercase letter');
+    }
+
+    if (!/[A-Z]/.test(password)) {
+        errors.push('Password must contain at least one uppercase letter');
+    }
+
+    if (!/[0-9]/.test(password)) {
+        errors.push('Password must contain at least one number');
+    }
+
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+        errors.push('Password must contain at least one special character');
+    }
+
+    // Check for common weak passwords
+    const weakPasswords = [
+        'password123', 'admin123', 'welcome123', '123456789',
+        'password1234', 'admin1234', 'qwerty123'
+    ];
+    if (weakPasswords.includes(password.toLowerCase())) {
+        errors.push('Password is too common. Please choose a more unique password');
+    }
+
+    return {
+        isValid: errors.length === 0,
+        errors: errors
+    };
+};
+
 // Admin login
 exports.login = async (req, res, next) => {
     try {
         const { username, password } = req.body;
-        
-        // Development mode - hardcoded admin credentials
-        // TODO: Remove this when database is set up
-        const devAdminUsername = 'admin';
-        const devAdminPassword = 'admin123';
-        
-        if (username === devAdminUsername && password === devAdminPassword) {
-            const token = generateToken(1, 'admin');
-            
-            logger.info(`Development admin logged in: ${username}`);
-            
-            return res.json({
-                success: true,
-                message: 'Login successful (Development Mode)',
-                token: token,
-                user: {
-                    id: 1,
-                    username: 'admin',
-                    email: 'admin@bgpnc.com',
-                    full_name: 'BGP Administrator',
-                    role: 'admin'
-                }
-            });
+
+        // Development mode fallback - ONLY in local development
+        // SECURITY: This is disabled in production for security
+        if (process.env.NODE_ENV === 'development') {
+            const devAdminUsername = 'admin';
+            const devAdminPassword = 'admin123';
+
+            if (username === devAdminUsername && password === devAdminPassword) {
+                const token = generateToken(1, 'admin');
+
+                logger.info(`Development admin logged in: ${username}`);
+
+                return res.json({
+                    success: true,
+                    message: 'Login successful (Development Mode)',
+                    token: token,
+                    user: {
+                        id: 1,
+                        username: 'admin',
+                        email: 'admin@bgpnc.com',
+                        full_name: 'BGP Administrator',
+                        role: 'admin'
+                    }
+                });
+            }
         }
-        
-        // Try database login if development credentials don't match
+
+        // Database login
         try {
             // Find user by username or email
             const [users] = await pool.execute(
@@ -212,12 +253,14 @@ exports.changePassword = async (req, res, next) => {
     try {
         const { currentPassword, newPassword } = req.body;
         const userId = req.user.id;
-        
-        // Validate new password
-        if (newPassword.length < 8) {
+
+        // SECURITY: Validate new password strength
+        const passwordValidation = validatePasswordStrength(newPassword);
+        if (!passwordValidation.isValid) {
             return res.status(400).json({
                 success: false,
-                message: 'New password must be at least 8 characters long'
+                message: 'Password does not meet security requirements',
+                errors: passwordValidation.errors
             });
         }
         
@@ -244,8 +287,8 @@ exports.changePassword = async (req, res, next) => {
             });
         }
         
-        // Hash new password
-        const newPasswordHash = await bcrypt.hash(newPassword, 10);
+        // Hash new password with recommended salt rounds
+        const newPasswordHash = await bcrypt.hash(newPassword, 12);
         
         // Update password
         await pool.execute(
@@ -298,9 +341,20 @@ exports.createInitialAdmin = async (req, res, next) => {
         const username = process.env.ADMIN_USERNAME || 'admin';
         const email = process.env.ADMIN_EMAIL || 'admin@bgpnc.com';
         const password = process.env.ADMIN_PASSWORD || 'ChangeMeNow!';
-        
-        // Hash password
-        const passwordHash = await bcrypt.hash(password, 10);
+
+        // SECURITY: Validate password strength
+        const passwordValidation = validatePasswordStrength(password);
+        if (!passwordValidation.isValid) {
+            return res.status(400).json({
+                success: false,
+                message: 'Admin password does not meet security requirements',
+                errors: passwordValidation.errors,
+                note: 'Set a strong ADMIN_PASSWORD in environment variables'
+            });
+        }
+
+        // Hash password with recommended salt rounds
+        const passwordHash = await bcrypt.hash(password, 12);
         
         // Insert admin user
         const [result] = await pool.execute(

@@ -99,14 +99,18 @@ CREATE TABLE IF NOT EXISTS activity_logs (
     INDEX idx_created (created_at)
 );
 
--- Insert default admin user (password: admin123 - CHANGE IMMEDIATELY)
--- Password hash is for 'admin123' - bcrypt with 10 rounds
-INSERT INTO users (username, email, password_hash, full_name, role, is_active) 
-VALUES (
-    'admin', 
-    'admin@bgpnc.com', 
-    '$2a$10$YourHashHere', -- Replace with actual bcrypt hash
-    'System Administrator', 
-    'admin', 
-    TRUE
-) ON DUPLICATE KEY UPDATE id=id;
+-- SECURITY: To create the initial admin user, use the API endpoint after database setup:
+-- POST /api/auth/setup-admin
+-- This will create an admin user using credentials from environment variables:
+-- ADMIN_USERNAME, ADMIN_EMAIL, and ADMIN_PASSWORD
+--
+-- The API enforces strong password requirements:
+-- - At least 12 characters
+-- - Uppercase and lowercase letters
+-- - Numbers and special characters
+-- - Not a common weak password
+--
+-- Example using curl:
+-- curl -X POST http://localhost:5000/api/auth/setup-admin
+--
+-- Make sure to set strong values in your .env file before running this!

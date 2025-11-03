@@ -52,5 +52,5 @@ Thumbs.db
 # Production
 /backend/logs/*.log
 
-# Keep deployment template but ignore actual production env files with secrets
-!backend/.env.production
+# Note: All .env files including .env.production should never be committed
+# Use your deployment platform's environment variable configuration instead

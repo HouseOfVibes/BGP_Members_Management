@@ -313,29 +313,47 @@ exports.updateMember = async (req, res, next) => {
         // Try database first
         try {
             const connection = await pool.getConnection();
-            
+
             try {
                 await connection.beginTransaction();
-                
+
                 const memberId = req.params.id;
-                const updates = req.body;
-                
-                // Remove fields that shouldn't be updated directly
-                delete updates.id;
-                delete updates.created_at;
-                delete updates.updated_at;
-                
+
+                // SECURITY: Whitelist of allowed fields to prevent SQL injection
+                const allowedFields = [
+                    'first_name', 'last_name', 'email', 'phone',
+                    'street_address', 'city', 'state', 'zip_code',
+                    'date_of_birth', 'baptism_date', 'member_status',
+                    'marital_status', 'spouse_name', 'photo_consent',
+                    'social_media_consent', 'email_consent',
+                    'referral_source', 'admin_notes'
+                ];
+
+                // Filter updates to only include whitelisted fields
+                const updates = {};
+                for (const [key, value] of Object.entries(req.body)) {
+                    if (allowedFields.includes(key)) {
+                        updates[key] = value;
+                    }
+                }
+
+                if (Object.keys(updates).length === 0) {
+                    await connection.rollback();
+                    return res.status(400).json({
+                        success: false,
+                        message: 'No valid fields to update'
+                    });
+                }
+
                 // Build update query
                 const updateFields = Object.keys(updates).map(key => `${key} = ?`).join(', ');
                 const updateValues = Object.values(updates);
                 updateValues.push(memberId);
-                
-                if (updateFields.length > 0) {
-                    await connection.execute(
-                        `UPDATE members SET ${updateFields} WHERE id = ?`,
-                        updateValues
-                    );
-                }
+
+                await connection.execute(
+                    `UPDATE members SET ${updateFields} WHERE id = ?`,
+                    updateValues
+                );
                 
                 // Log activity
                 await connection.execute(

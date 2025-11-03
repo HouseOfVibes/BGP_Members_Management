@@ -80,34 +80,42 @@ exports.getDashboardStats = async (req, res, next) => {
 exports.getAnalytics = async (req, res, next) => {
     try {
         const range = req.query.range || '30days';
-        let dateFilter = '';
-        
+        let intervalDays = 30;
+        let intervalType = 'DAY';
+
+        // SECURITY: Use whitelisted values and parameterized queries
         switch(range) {
             case '7days':
-                dateFilter = 'DATE_SUB(CURDATE(), INTERVAL 7 DAY)';
+                intervalDays = 7;
+                intervalType = 'DAY';
                 break;
             case '30days':
-                dateFilter = 'DATE_SUB(CURDATE(), INTERVAL 30 DAY)';
+                intervalDays = 30;
+                intervalType = 'DAY';
                 break;
             case '90days':
-                dateFilter = 'DATE_SUB(CURDATE(), INTERVAL 90 DAY)';
+                intervalDays = 90;
+                intervalType = 'DAY';
                 break;
             case 'year':
-                dateFilter = 'DATE_SUB(CURDATE(), INTERVAL 1 YEAR)';
+                intervalDays = 1;
+                intervalType = 'YEAR';
                 break;
             default:
-                dateFilter = 'DATE_SUB(CURDATE(), INTERVAL 30 DAY)';
+                intervalDays = 30;
+                intervalType = 'DAY';
         }
-        
-        // Growth over time
+
+        // Growth over time - using parameterized query for safety
         const [growthData] = await pool.execute(
-            `SELECT 
+            `SELECT
                 DATE(join_date) as date,
                 COUNT(*) as new_members
              FROM members
-             WHERE join_date >= ${dateFilter}
+             WHERE join_date >= DATE_SUB(CURDATE(), INTERVAL ? ${intervalType})
              GROUP BY DATE(join_date)
-             ORDER BY date`
+             ORDER BY date`,
+            [intervalDays]
         );
         
         // Age distribution

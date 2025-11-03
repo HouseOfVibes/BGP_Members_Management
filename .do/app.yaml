@@ -15,9 +15,11 @@ services:
       - key: PORT
         value: "5000"
       - key: JWT_SECRET
-        value: "bgp-super-secure-jwt-secret-2024-change-in-production"
+        # SECURITY: Set this via DigitalOcean dashboard with a strong random value
+        # Generate using: openssl rand -base64 64
+        value: "REPLACE_WITH_SECURE_VALUE"
       - key: JWT_EXPIRES_IN
-        value: "7d"
+        value: "2h"
       - key: BCRYPT_SALT_ROUNDS
         value: "12"
       - key: RATE_LIMIT_WINDOW_MS
@@ -25,13 +27,18 @@ services:
       - key: RATE_LIMIT_MAX_REQUESTS
         value: "100"
       - key: CORS_ORIGIN
-        value: "*"
+        # SECURITY: NEVER use "*" in production! Set to your actual frontend URL
+        value: "REPLACE_WITH_FRONTEND_URL"
       - key: ADMIN_USERNAME
-        value: "bgpadmin"
+        # SECURITY: Set via DigitalOcean dashboard
+        value: "REPLACE_WITH_ADMIN_USERNAME"
       - key: ADMIN_EMAIL
-        value: "admin@bgpnc.com"
+        # SECURITY: Set via DigitalOcean dashboard
+        value: "REPLACE_WITH_ADMIN_EMAIL"
       - key: ADMIN_PASSWORD
-        value: "BGP2024Admin!"
+        # SECURITY: Set a strong password via DigitalOcean dashboard
+        # Must be at least 12 characters with uppercase, lowercase, numbers, and symbols
+        value: "REPLACE_WITH_STRONG_PASSWORD"
     health_check:
       http_path: /health
 

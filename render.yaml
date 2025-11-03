@@ -12,9 +12,11 @@ services:
       - key: PORT
         value: 10000
       - key: JWT_SECRET
-        value: bgp-super-secure-jwt-secret-2024-change-in-production
+        sync: false
+        # SECURITY: Set this via Render Dashboard with a strong random value
+        # Generate using: openssl rand -base64 64
       - key: JWT_EXPIRES_IN
-        value: 7d
+        value: 2h
       - key: BCRYPT_SALT_ROUNDS
         value: 12
       - key: RATE_LIMIT_WINDOW_MS
@@ -23,13 +25,18 @@ services:
         value: 100
       - key: CORS_ORIGIN
         sync: false
-        value: https://bgp-frontend.onrender.com
+        # SECURITY: Set this to your actual frontend URL via Render Dashboard
+        # Example: https://your-frontend-name.onrender.com
       - key: ADMIN_USERNAME
-        value: bgpadmin
+        sync: false
+        # SECURITY: Set via Render Dashboard
       - key: ADMIN_EMAIL
-        value: admin@bgpnc.com
+        sync: false
+        # SECURITY: Set via Render Dashboard
       - key: ADMIN_PASSWORD
-        value: BGP2024Admin!
+        sync: false
+        # SECURITY: Set a strong password via Render Dashboard
+        # Must be at least 12 characters with uppercase, lowercase, numbers, and symbols
     healthCheckPath: /health
 
   # Frontend Static Site
@@ -40,7 +47,8 @@ services:
     envVars:
       - key: REACT_APP_API_URL
         sync: false
-        value: https://bgp-backend.onrender.com/api
+        # Set this to your actual backend URL via Render Dashboard
+        # Example: https://your-backend-name.onrender.com
       - key: REACT_APP_ENVIRONMENT
         value: production
     routes:
