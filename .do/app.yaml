@@ -1,0 +1,52 @@
+name: bgp-member-management
+services:
+  # Backend API Service
+  - name: bgp-backend
+    source_dir: /backend
+    run_command: npm start
+    build_command: npm install
+    environment_slug: node-js
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    http_port: 5000
+    env:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "5000"
+      - key: JWT_SECRET
+        value: "bgp-super-secure-jwt-secret-2024-change-in-production"
+      - key: JWT_EXPIRES_IN
+        value: "7d"
+      - key: BCRYPT_SALT_ROUNDS
+        value: "12"
+      - key: RATE_LIMIT_WINDOW_MS
+        value: "900000"
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: "100"
+      - key: CORS_ORIGIN
+        value: "*"
+      - key: ADMIN_USERNAME
+        value: "bgpadmin"
+      - key: ADMIN_EMAIL
+        value: "admin@bgpnc.com"
+      - key: ADMIN_PASSWORD
+        value: "BGP2024Admin!"
+    health_check:
+      http_path: /health
+
+  # Frontend React Service
+  - name: bgp-frontend
+    source_dir: /frontend
+    build_command: npm install && npm run build
+    environment_slug: node-js
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    env:
+      - key: REACT_APP_API_URL
+        value: "${bgp-backend.PUBLIC_URL}/api"
+      - key: REACT_APP_ENVIRONMENT
+        value: "production"
+    http_port: 3000
+    routes:
+      - path: /
