@@ -4,7 +4,8 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 // Page Components
 import HomePage from './pages/HomePage';
-import RegisterPage from './pages/RegisterPage';
+import RegisterPage from './pages/RegisterPageNew'; // Using new comprehensive form
+import RegisterPageEmbedded from './pages/RegisterPageEmbedded'; // Embeddable version
 import RegistrationSuccessPage from './pages/RegistrationSuccessPage';
 import LoginPage from './pages/LoginPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -22,15 +23,15 @@ import LoadingSpinner from './components/common/LoadingSpinner';
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
-  
+
   if (loading) {
     return <LoadingSpinner />;
   }
-  
+
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/admin/login" replace />;
   }
-  
+
   return children;
 };
 
@@ -64,13 +65,25 @@ function AppRoutes() {
           <RegisterPage />
         </PublicLayout>
       } />
-      
+
+      {/* Embeddable Registration Form (no header/footer) */}
+      <Route path="/register/embed" element={
+        <RegisterPageEmbedded />
+      } />
+
       <Route path="/registration-success" element={
         <RegistrationSuccessPage />
       } />
       
       {/* Auth Routes */}
       <Route path="/login" element={
+        <PublicRoute>
+          <LoginPage />
+        </PublicRoute>
+      } />
+
+      {/* Dedicated Admin Login Route */}
+      <Route path="/admin/login" element={
         <PublicRoute>
           <LoginPage />
         </PublicRoute>

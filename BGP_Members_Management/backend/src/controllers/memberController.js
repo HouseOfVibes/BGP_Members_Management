@@ -5,23 +5,32 @@ const { sendWelcomeEmail } = require('../services/emailService');
 // Register new member (public endpoint)
 exports.registerMember = async (req, res, next) => {
     try {
-        // Extract member data
+        // Extract member data with new fields
         const memberData = {
             first_name: req.body.first_name,
             last_name: req.body.last_name,
             email: req.body.email,
             phone: req.body.phone,
+            date_of_birth: req.body.date_of_birth,
+            gender: req.body.gender || null,
             street_address: req.body.street_address,
             city: req.body.city,
             state: req.body.state,
             zip_code: req.body.zip_code,
-            date_of_birth: req.body.date_of_birth,
+            country: req.body.country || 'US',
+            baptism_status: req.body.baptism_status || 'prefer_not_to_say',
             baptism_date: req.body.baptism_date || null,
+            previous_church: req.body.previous_church || null,
             marital_status: req.body.marital_status || null,
             spouse_name: req.body.spouse_name || null,
-            photo_consent: req.body.photo_consent || false,
+            volunteer_interests: req.body.volunteer_interests ? JSON.stringify(req.body.volunteer_interests) : null,
+            skills_talents: req.body.skills_talents ? JSON.stringify(req.body.skills_talents) : null,
+            small_groups: req.body.small_groups ? JSON.stringify(req.body.small_groups) : null,
+            photo_consent: req.body.photo_consent || 'not_answered',
             social_media_consent: req.body.social_media_consent || false,
-            email_consent: req.body.email_consent || true,
+            email_consent: req.body.email_consent !== undefined ? req.body.email_consent : true,
+            children_photo_consent: req.body.children_photo_consent || 'not_applicable',
+            parental_consent: req.body.parental_consent || false,
             referral_source: req.body.referral_source || null,
             registration_method: 'online'
         };
@@ -46,14 +55,33 @@ exports.registerMember = async (req, res, next) => {
                     for (const child of req.body.children) {
                         if (child.name) { // Only add if child has a name
                             await connection.execute(
-                                `INSERT INTO children (parent_id, name, date_of_birth, gender, parental_consent) 
-                                 VALUES (?, ?, ?, ?, ?)`,
+                                `INSERT INTO children (parent_id, name, date_of_birth, gender)
+                                 VALUES (?, ?, ?, ?)`,
                                 [
                                     memberId,
                                     child.name,
                                     child.date_of_birth || null,
-                                    child.gender || null,
-                                    req.body.parental_consent || false
+                                    child.gender || null
+                                ]
+                            );
+                        }
+                    }
+                }
+
+                // Insert household members if any
+                if (req.body.household_members && req.body.household_members.length > 0) {
+                    for (const member of req.body.household_members) {
+                        if (member.name) { // Only add if member has a name
+                            await connection.execute(
+                                `INSERT INTO household_members (primary_member_id, name, relationship, email, phone, date_of_birth)
+                                 VALUES (?, ?, ?, ?, ?, ?)`,
+                                [
+                                    memberId,
+                                    member.name,
+                                    member.relationship || null,
+                                    member.email || null,
+                                    member.phone || null,
+                                    member.date_of_birth || null
                                 ]
                             );
                         }

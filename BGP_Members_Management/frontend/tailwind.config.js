@@ -6,23 +6,32 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // BGP Brand Colors
+        // BGP Brand Colors (Updated from brand guide)
         'bgp': {
           'dark': '#212121',
-          'darker': '#1a1a1a',
+          'darker': '#000000',
           'gold': {
             DEFAULT: '#9c8040',
-            'hover': '#b59448',
-            'active': '#8a6f37'
+            'hover': '#b89654',
+            'alt': '#b8975a',
+            'dark': '#8a7138'
           },
           'teal': {
-            DEFAULT: '#009688',
-            'hover': '#00796b'
+            DEFAULT: '#009688', // Teal bright
+            'dark': '#1a4d4d',
+            'mid': '#2d7373',
+            'light': '#4a9999',
+            'hover': '#2d7373'
           },
           'gray': {
-            'light': '#f5f5f5',
+            'light': '#f8f8f8',
             'medium': '#cccccc',
             'dark': '#666666'
+          },
+          'text': {
+            'dark': '#333333',
+            'medium': '#555555',
+            'light': '#666666'
           }
         },
         // Status Color System
@@ -69,7 +78,10 @@ module.exports = {
         }
       },
       fontFamily: {
-        'sans': ['Inter', 'Arial', 'sans-serif'],
+        'primary': ['Noto Serif', 'Georgia', 'serif'],
+        'secondary': ['Montserrat', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+        'sans': ['Montserrat', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'], // Default
+        'serif': ['Noto Serif', 'Georgia', 'serif'],
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',

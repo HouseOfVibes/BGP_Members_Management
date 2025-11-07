@@ -9,6 +9,7 @@ const authRoutes = require('./src/routes/auth.routes');
 const memberRoutes = require('./src/routes/member.routes');
 const adminRoutes = require('./src/routes/admin.routes');
 const publicRoutes = require('./src/routes/public.routes');
+const uploadRoutes = require('./src/routes/upload.routes');
 const errorHandler = require('./src/middleware/errorHandler');
 const logger = require('./src/utils/logger');
 
@@ -52,6 +53,9 @@ app.use('/api/public/register', registrationLimiter);
 // Body parsing middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Logging middleware
 app.use((req, res, next) => {
@@ -176,6 +180,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/members', memberRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/public', publicRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // 404 handler
 app.use((req, res) => {
