@@ -1,7 +1,29 @@
 const pool = require('../config/database');
 const logger = require('../utils/logger');
-// Note: csv-writer not installed, will implement basic CSV creation
 const XLSX = require('xlsx');
+const multer = require('multer');
+const path = require('path');
+
+// Configure multer for file uploads
+const storage = multer.memoryStorage();
+const upload = multer({
+    storage: storage,
+    limits: {
+        fileSize: 10 * 1024 * 1024 // 10MB limit
+    },
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = [
+            'text/csv',
+            'application/vnd.ms-excel',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        ];
+        if (allowedTypes.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new Error('Invalid file type. Only CSV and Excel files are allowed.'));
+        }
+    }
+}).single('file');
 
 // Get dashboard statistics
 exports.getDashboardStats = async (req, res, next) => {
@@ -450,4 +472,216 @@ exports.bulkUpdateStatus = async (req, res, next) => {
     } finally {
         connection.release();
     }
+};
+// Bulk import members from CSV/Excel file
+exports.bulkImportMembers = async (req, res, next) => {
+    // Handle file upload first
+    upload(req, res, async (err) => {
+        if (err) {
+            logger.error('File upload error:', err);
+            return res.status(400).json({
+                success: false,
+                message: err.message || 'File upload failed'
+            });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: 'No file uploaded'
+            });
+        }
+
+        const connection = await pool.getConnection();
+
+        try {
+            await connection.beginTransaction();
+
+            let members = [];
+            const fileExtension = path.extname(req.file.originalname).toLowerCase();
+
+            // Parse file based on type
+            if (fileExtension === '.csv') {
+                // Parse CSV
+                const csvData = req.file.buffer.toString('utf-8');
+                const lines = csvData.split('\n');
+                const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+
+                for (let i = 1; i < lines.length; i++) {
+                    if (!lines[i].trim()) continue;
+                    
+                    const values = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+                    const member = {};
+                    
+                    headers.forEach((header, index) => {
+                        member[header] = values[index] || null;
+                    });
+                    
+                    members.push(member);
+                }
+            } else if (fileExtension === '.xlsx' || fileExtension === '.xls') {
+                // Parse Excel
+                const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                const data = XLSX.utils.sheet_to_json(worksheet, { defval: null });
+                
+                // Normalize keys to lowercase
+                members = data.map(row => {
+                    const normalized = {};
+                    Object.keys(row).forEach(key => {
+                        normalized[key.toLowerCase().trim()] = row[key];
+                    });
+                    return normalized;
+                });
+            } else {
+                throw new Error('Unsupported file format');
+            }
+
+            // Validate and import members
+            const results = {
+                success: 0,
+                failed: 0,
+                errors: []
+            };
+
+            // Field mapping - map common column names to database fields
+            const fieldMapping = {
+                'first name': 'first_name',
+                'firstname': 'first_name',
+                'first_name': 'first_name',
+                'last name': 'last_name',
+                'lastname': 'last_name',
+                'last_name': 'last_name',
+                'email': 'email',
+                'email address': 'email',
+                'phone': 'phone',
+                'phone number': 'phone',
+                'street address': 'street_address',
+                'address': 'street_address',
+                'street_address': 'street_address',
+                'city': 'city',
+                'state': 'state',
+                'zip': 'zip_code',
+                'zip code': 'zip_code',
+                'zipcode': 'zip_code',
+                'zip_code': 'zip_code',
+                'date of birth': 'date_of_birth',
+                'dob': 'date_of_birth',
+                'birth date': 'date_of_birth',
+                'date_of_birth': 'date_of_birth',
+                'baptism date': 'baptism_date',
+                'baptism_date': 'baptism_date',
+                'marital status': 'marital_status',
+                'marital_status': 'marital_status',
+                'spouse name': 'spouse_name',
+                'spouse': 'spouse_name',
+                'spouse_name': 'spouse_name'
+            };
+
+            for (let i = 0; i < members.length; i++) {
+                try {
+                    const rawMember = members[i];
+                    
+                    // Map fields to database columns
+                    const memberData = {};
+                    Object.keys(rawMember).forEach(key => {
+                        const normalizedKey = key.toLowerCase().trim();
+                        const dbField = fieldMapping[normalizedKey] || normalizedKey;
+                        memberData[dbField] = rawMember[key];
+                    });
+
+                    // Validate required fields
+                    if (!memberData.first_name || !memberData.last_name || !memberData.email || !memberData.phone) {
+                        results.errors.push({
+                            row: i + 2,
+                            error: 'Missing required fields (first_name, last_name, email, phone)',
+                            data: memberData
+                        });
+                        results.failed++;
+                        continue;
+                    }
+
+                    // Set defaults
+                    memberData.member_status = memberData.member_status || 'new_member';
+                    memberData.registration_method = 'bulk_import';
+                    memberData.photo_consent = memberData.photo_consent === 'true' || memberData.photo_consent === true || false;
+                    memberData.social_media_consent = memberData.social_media_consent === 'true' || memberData.social_media_consent === true || false;
+                    memberData.email_consent = memberData.email_consent === 'true' || memberData.email_consent === true || true;
+
+                    // Insert member
+                    const [result] = await connection.execute(
+                        `INSERT INTO members 
+                        (first_name, last_name, email, phone, street_address, city, state, zip_code,
+                         date_of_birth, baptism_date, member_status, marital_status, spouse_name,
+                         photo_consent, social_media_consent, email_consent, registration_method)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                        [
+                            memberData.first_name,
+                            memberData.last_name,
+                            memberData.email,
+                            memberData.phone,
+                            memberData.street_address || null,
+                            memberData.city || null,
+                            memberData.state || null,
+                            memberData.zip_code || null,
+                            memberData.date_of_birth || null,
+                            memberData.baptism_date || null,
+                            memberData.member_status,
+                            memberData.marital_status || null,
+                            memberData.spouse_name || null,
+                            memberData.photo_consent,
+                            memberData.social_media_consent,
+                            memberData.email_consent,
+                            memberData.registration_method
+                        ]
+                    );
+
+                    results.success++;
+                } catch (error) {
+                    results.failed++;
+                    results.errors.push({
+                        row: i + 2,
+                        error: error.code === 'ER_DUP_ENTRY' ? 'Email already exists' : error.message,
+                        data: members[i]
+                    });
+                }
+            }
+
+            // Log bulk import activity
+            await connection.execute(
+                `INSERT INTO activity_logs (user_id, action, entity_type, details, ip_address) 
+                 VALUES (?, ?, ?, ?, ?)`,
+                [
+                    req.user.id,
+                    'bulk_import',
+                    'members',
+                    JSON.stringify({
+                        filename: req.file.originalname,
+                        total: members.length,
+                        success: results.success,
+                        failed: results.failed
+                    }),
+                    req.ip
+                ]
+            );
+
+            await connection.commit();
+
+            logger.info(`Bulk import completed: ${results.success} success, ${results.failed} failed`);
+
+            res.json({
+                success: true,
+                message: `Import completed: ${results.success} members imported successfully`,
+                results: results
+            });
+
+        } catch (error) {
+            await connection.rollback();
+            logger.error('Bulk import error:', error);
+            next(error);
+        } finally {
+            connection.release();
+        }
+    });
 };

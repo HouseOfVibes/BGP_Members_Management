@@ -96,8 +96,17 @@ export const adminAPI = {
     });
   },
   getActivityLogs: (params = {}) => apiClient.get('/admin/activity-logs', { params }),
-  bulkUpdateStatus: (memberIds, status) => 
-    apiClient.post('/admin/bulk-update-status', { memberIds, status })
+  bulkUpdateStatus: (memberIds, status) =>
+    apiClient.post('/admin/bulk-update-status', { memberIds, status }),
+  bulkImport: (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return apiClient.post('/admin/bulk-import', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+  }
 };
 
 // Utility functions for file downloads

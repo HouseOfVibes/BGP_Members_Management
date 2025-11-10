@@ -23,4 +23,7 @@ router.get('/activity-logs', authorize('admin'), adminController.getActivityLogs
 // Bulk operations
 router.post('/bulk-update-status', authorize('admin'), adminController.bulkUpdateStatus);
 
+// Bulk import members from spreadsheet
+router.post('/bulk-import', authorize('admin'), adminController.bulkImportMembers);
+
 module.exports = router;

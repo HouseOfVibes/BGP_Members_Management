@@ -55,10 +55,16 @@ function AppRoutes() {
       {/* Public Routes */}
       <Route path="/" element={
         <PublicLayout>
+          <RegisterPage />
+        </PublicLayout>
+      } />
+
+      <Route path="/home" element={
+        <PublicLayout>
           <HomePage />
         </PublicLayout>
       } />
-      
+
       <Route path="/register" element={
         <PublicLayout>
           <RegisterPage />
