@@ -1,3 +1,10 @@
+# DEPRECATED: This project now uses Railway + Vercel + Supabase
+# See DEPLOYMENT_RAILWAY_VERCEL.md for current deployment instructions
+#
+# This render.yaml is kept for reference only
+# For Render deployment, you would need to update environment variables
+# to use SUPABASE_URL and SUPABASE_SERVICE_KEY instead of database credentials
+
 services:
   # Backend API Service
   - type: web

@@ -1,0 +1,13 @@
+# Backend files (not needed for frontend deployment)
+backend/
+*.md
+.git/
+.gitignore
+
+# Development files
+.env
+.env.*
+!.env.example
+
+# Node modules will be installed by Vercel
+node_modules/
