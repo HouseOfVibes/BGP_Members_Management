@@ -1,6 +1,6 @@
 # BGP Members Management System
 
-A comprehensive web application for managing BGP (Black Giving Pledge) North Carolina members with admin dashboard, member registration, and analytics.
+A comprehensive web application for managing Believers Gathering Place (BGP) North Carolina church members with admin dashboard, member registration, and analytics.
 
 ## Features
 
@@ -12,17 +12,24 @@ A comprehensive web application for managing BGP (Black Giving Pledge) North Car
 - **Activity Logs**: Track all admin actions and member activities
 
 ### Member Features
-- **Self-Registration**: Public registration form for new members
-- **Profile Management**: Members can update their information
+- **Self-Registration**: Comprehensive public registration form for new members
+- **Embeddable Registration**: Iframe-compatible registration form at `/register/embed`
+- **Family Management**: Track spouse, children, and household members
 - **Membership Status**: Track active, pending, and inactive members
-- **Location Mapping**: Visual representation of member locations
+- **Volunteer & Skills Tracking**: Track volunteer interests and member talents
+- **Consent Management**: Photo, social media, and email consent tracking
+
+### Integrations
+- **Pabbly Connect**: Webhook integration for automated registration workflows
+- **PlanetScale**: Cloud MySQL database support with connection pooling
 
 ## Tech Stack
 
-- **Frontend**: React 18, Tailwind CSS, Chart.js, React Router
-- **Backend**: Node.js, Express, MySQL
-- **Authentication**: JWT tokens with refresh tokens
-- **Deployment**: Vercel (serverless)
+- **Frontend**: React 18, Tailwind CSS, Chart.js, React Router, React Query
+- **Backend**: Node.js, Express, MySQL/PlanetScale
+- **Authentication**: JWT tokens with refresh tokens, bcrypt password hashing
+- **Security**: Helmet, rate limiting, input validation, CORS
+- **Deployment**: Vercel, Render, or DigitalOcean App Platform
 
 ## Quick Start
 
@@ -117,9 +124,15 @@ REACT_APP_API_URL=https://your-app.vercel.app
 ## Database Schema
 
 The application uses the following main tables:
-- `members`: Stores all member information including admins
-- `activity_logs`: Tracks all system activities
-- `password_reset_tokens`: Manages password reset requests
+- `members`: Core member data (personal info, address, church info, consent flags)
+- `users`: Admin user accounts (separate from members)
+- `household_members`: Additional adult household members
+- `children`: Child records linked to parent members
+- `activity_logs`: Audit trail of all system actions
+
+Database schema files are located in `backend/database/`:
+- `schema_updated.sql` - Latest schema with all features (recommended)
+- `migrate_safe.sql` - Safe migration script for updates
 
 ## API Endpoints
 
@@ -131,6 +144,9 @@ The application uses the following main tables:
 ### Public
 - `POST /api/public/register` - Member registration
 - `GET /api/public/health` - Health check
+
+### Webhooks
+- `POST /api/webhook/pabbly/registration` - Pabbly Connect registration webhook
 
 ### Admin (Protected)
 - `GET /api/admin/dashboard` - Dashboard statistics
@@ -150,28 +166,33 @@ The application uses the following main tables:
 ```
 BGP_Members_Management/
 ├── backend/
-│   ├── server.js           # Express server entry
+│   ├── server.js           # Express server entry (port 5000)
 │   ├── database/
-│   │   ├── schema.sql      # Database schema
-│   │   └── setup.js        # Database setup script
+│   │   ├── schema_updated.sql  # Latest database schema
+│   │   ├── migrate_safe.sql    # Safe migration script
+│   │   └── setup.js            # Database setup script
 │   ├── src/
-│   │   ├── config/         # Database config
+│   │   ├── config/         # Database & upload config
 │   │   ├── controllers/    # Route controllers
-│   │   ├── middleware/     # Auth & validation
-│   │   ├── routes/         # API routes
-│   │   └── services/       # Business logic
+│   │   ├── middleware/     # Auth, validation, error handling
+│   │   ├── routes/         # API routes (auth, members, admin, public, webhook)
+│   │   ├── services/       # Email service
+│   │   └── utils/          # Logger, helpers
 │   └── package.json
 ├── frontend/
 │   ├── public/
 │   ├── src/
-│   │   ├── components/     # React components
+│   │   ├── components/     # Layout & common components
 │   │   ├── contexts/       # Auth context
-│   │   ├── pages/          # Page components
-│   │   ├── services/       # API services
-│   │   └── App.js          # Main app component
+│   │   ├── pages/          # Page components (public & admin)
+│   │   ├── services/       # API services (Axios)
+│   │   └── App.js          # Main app with routing
+│   ├── tailwind.config.js  # Tailwind with BGP brand colors
 │   └── package.json
-├── vercel.json             # Vercel config
-└── package.json            # Root package.json
+├── vercel.json             # Vercel deployment config
+├── render.yaml             # Render deployment config
+├── app.yaml                # DigitalOcean App Platform config
+└── package.json            # Root monorepo package (npm run dev)
 ```
 
 ## Security Features
@@ -184,10 +205,30 @@ BGP_Members_Management/
 - SQL injection prevention
 - XSS protection
 
+## Development Notes
+
+### Cleanup Recommendations
+
+If you cloned from the parent directory, note that there are outdated duplicate directories at the root level that should be removed:
+
+```bash
+# These root-level directories are outdated and should be deleted:
+# - /backend/ (57 MB - old version with node_modules)
+# - /frontend/ (361 MB - old version with node_modules)
+# - /database/ (superseded by BGP_Members_Management/backend/database/)
+
+# The active code is in this BGP_Members_Management/ directory
+```
+
+### Registration Page Versions
+
+- `RegisterPageNew.js` - Active comprehensive registration form
+- `RegisterPageEmbedded.js` - Embeddable version for iframes (no header/footer)
+
 ## Support
 
 For issues or questions, please contact the development team or create an issue in the repository.
 
 ## License
 
-Private - BGP North Carolina
+Private - Believers Gathering Place North Carolina

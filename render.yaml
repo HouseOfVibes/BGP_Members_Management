@@ -12,7 +12,7 @@ services:
       - key: PORT
         value: 10000
       - key: JWT_SECRET
-        value: bgp-super-secure-jwt-secret-2024-change-in-production
+        generateValue: true  # Render will generate a secure random value
       - key: JWT_EXPIRES_IN
         value: 7d
       - key: BCRYPT_SALT_ROUNDS
@@ -29,7 +29,7 @@ services:
       - key: ADMIN_EMAIL
         value: admin@bgpnc.com
       - key: ADMIN_PASSWORD
-        value: BGP2024Admin!
+        sync: false  # Set this manually in Render dashboard for security
     healthCheckPath: /health
 
   # Frontend Static Site
